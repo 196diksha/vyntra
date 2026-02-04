@@ -83,22 +83,16 @@ const ProductPage = () => {
                 onMouseLeave={() => setIsZoomed(false)}
               >
                 {activeImage ? (
-                  <div
-                    className="w-full h-full"
+                  <img
+                    src={resolveImageUrl(activeImage)}
+                    alt={product.name}
+                    className="w-full h-full object-contain transition-transform duration-200"
                     style={{
-                      backgroundImage: `url(${resolveImageUrl(activeImage)})`,
-                      backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
-                      backgroundSize: isZoomed ? '200%' : '100%',
-                      backgroundRepeat: 'no-repeat',
+                      transform: isZoomed ? 'scale(2)' : 'scale(1)',
+                      transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
                       cursor: 'zoom-in'
                     }}
-                  >
-                    <img
-                      src={resolveImageUrl(activeImage)}
-                      alt={product.name}
-                      className={`w-full h-full object-contain transition-opacity ${isZoomed ? 'opacity-0' : 'opacity-100'}`}
-                    />
-                  </div>
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-500">
                     No image

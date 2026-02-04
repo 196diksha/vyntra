@@ -88,7 +88,7 @@ const ProductPage = () => {
                     style={{
                       backgroundImage: `url(${resolveImageUrl(activeImage)})`,
                       backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
-                      backgroundSize: isZoomed ? '200%' : 'contain',
+                      backgroundSize: isZoomed ? '200%' : '100%',
                       backgroundRepeat: 'no-repeat',
                       cursor: 'zoom-in'
                     }}
@@ -96,7 +96,7 @@ const ProductPage = () => {
                     <img
                       src={resolveImageUrl(activeImage)}
                       alt={product.name}
-                      className="w-full h-full object-contain opacity-0"
+                      className={`w-full h-full object-contain transition-opacity ${isZoomed ? 'opacity-0' : 'opacity-100'}`}
                     />
                   </div>
                 ) : (

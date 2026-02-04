@@ -53,6 +53,10 @@ const Home = () => {
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value)
   );
 
+  const resolveImageUrl = (src) => (
+    src?.startsWith('http') ? src : `${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}${src}`
+  );
+
   return (
     <div className="py-8">
       <div className="container mx-auto px-4">
@@ -129,7 +133,7 @@ const Home = () => {
                     <div className="h-48 overflow-hidden relative">
                       {product.images?.[0] ? (
                         <img 
-                          src={`${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}${product.images[0]}`} 
+                          src={resolveImageUrl(product.images[0])} 
                           alt={product.name} 
                           className="w-full h-full object-cover"
                         />

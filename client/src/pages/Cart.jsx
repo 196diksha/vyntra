@@ -5,6 +5,9 @@ import { useCart } from '../context/CartContext';
 const formatPrice = (value) => (
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value)
 );
+const resolveImageUrl = (src) => (
+  src?.startsWith('http') ? src : `${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}${src}`
+);
 
 const Cart = () => {
   const { items, updateQuantity, removeFromCart, clearCart, totals } = useCart();
@@ -35,7 +38,7 @@ const Cart = () => {
                     <div className="h-32 bg-gray-100 rounded overflow-hidden">
                       {item.images?.[0] ? (
                         <img
-                          src={`${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}${item.images[0]}`}
+                          src={resolveImageUrl(item.images[0])}
                           alt={item.name}
                           className="w-full h-full object-cover"
                         />

@@ -4,23 +4,48 @@ const { protect, admin } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const uploadsDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+const cloudinaryEnabled = Boolean(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET
+);
+
+if (cloudinaryEnabled) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+  });
+}
+
 const router = express.Router();
 
 // Set storage engine for multer
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  }
-});
+const storage = cloudinaryEnabled
+  ? new CloudinaryStorage({
+      cloudinary,
+      params: {
+        folder: 'vyntra',
+        resource_type: 'image',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp']
+      }
+    })
+  : multer.diskStorage({
+      destination: (req, file, cb) => {
+        cb(null, uploadsDir);
+      },
+      filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+      }
+    });
 
 // Initialize upload
 const upload = multer({
@@ -131,7 +156,7 @@ router.post('/', protect, admin, upload.array('images', 5), async (req, res) => 
     const { name, description, price, category, brand, stock, sizes, specifications } = req.body;
     
     // Process image paths
-    const images = req.files.map(file => `/uploads/${file.filename}`);
+    const images = req.files.map(file => (cloudinaryEnabled ? file.path : `/uploads/${file.filename}`));
     
     const product = new Product({
       name,
@@ -178,7 +203,7 @@ router.put('/:id', protect, admin, upload.array('images', 5), async (req, res) =
       
       // Handle images
       if (req.files && req.files.length > 0) {
-        const images = req.files.map(file => `/uploads/${file.filename}`);
+        const images = req.files.map(file => (cloudinaryEnabled ? file.path : `/uploads/${file.filename}`));
         product.images = images;
       }
       

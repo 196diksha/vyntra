@@ -58,6 +58,10 @@ const ProductPage = () => {
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value)
   );
 
+  const resolveImageUrl = (src) => (
+    src?.startsWith('http') ? src : `${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}${src}`
+  );
+
   return (
     <div className="py-10">
       <div className="container mx-auto px-4">
@@ -82,7 +86,7 @@ const ProductPage = () => {
                   <div
                     className="w-full h-full"
                     style={{
-                      backgroundImage: `url(${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}${activeImage})`,
+                      backgroundImage: `url(${resolveImageUrl(activeImage)})`,
                       backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
                       backgroundSize: isZoomed ? '200%' : 'contain',
                       backgroundRepeat: 'no-repeat',
@@ -90,7 +94,7 @@ const ProductPage = () => {
                     }}
                   >
                     <img
-                      src={`${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}${activeImage}`}
+                      src={resolveImageUrl(activeImage)}
                       alt={product.name}
                       className="w-full h-full object-contain opacity-0"
                     />
@@ -113,7 +117,7 @@ const ProductPage = () => {
                       }`}
                     >
                       <img
-                        src={`${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}${img}`}
+                        src={resolveImageUrl(img)}
                         alt={`${product.name}-${index}`}
                         className="w-full h-full object-cover"
                       />
@@ -214,7 +218,7 @@ const ProductPage = () => {
                     <div className="h-48 overflow-hidden relative">
                       {item.images?.[0] ? (
                         <img
-                          src={`${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}${item.images[0]}`}
+                          src={resolveImageUrl(item.images[0])}
                           alt={item.name}
                           className="w-full h-full object-cover"
                         />

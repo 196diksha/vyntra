@@ -419,12 +419,12 @@ const AdminProducts = () => {
                     <tr key={product._id}>
                       <td className="px-4 py-3">
                         <div className="h-12 w-12 rounded-lg overflow-hidden bg-gray-100 border">
-                          {product.images?.[0] ? (
-                            <img
-                              src={`${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}${product.images[0]}`}
-                              alt={product.name}
-                              className="w-full h-full object-cover"
-                            />
+                              {product.images?.[0] ? (
+                                <img
+                                  src={product.images[0]?.startsWith('http') ? product.images[0] : `${import.meta.env.VITE_API_BASE || 'http://localhost:5000'}${product.images[0]}`}
+                                  alt={product.name}
+                                  className="w-full h-full object-cover"
+                                />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
                               No image

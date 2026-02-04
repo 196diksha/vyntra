@@ -5,6 +5,9 @@ import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import './index.css'
 import App from './App'
+import axios from 'axios'
+
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE || ''
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

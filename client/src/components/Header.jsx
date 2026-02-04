@@ -22,7 +22,7 @@ const Header = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/search?q=${searchQuery}`);
+      navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
     }
   };
 

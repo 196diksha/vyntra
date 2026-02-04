@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { FiHeart, FiShoppingCart, FiStar } from 'react-icons/fi';
 import { useWishlist } from '../context/WishlistContext';
@@ -10,6 +10,7 @@ const Products = () => {
   const [categories] = useState(['All', 'Electronics', 'Clothing', 'Home & Kitchen', 'Beauty']);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [search, setSearch] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -37,13 +38,23 @@ const Products = () => {
   };
 
   useEffect(() => {
+    const urlSearch = searchParams.get('search') || '';
+    setSearch(urlSearch);
+  }, [searchParams]);
+
+  useEffect(() => {
     fetchProducts();
-  }, [selectedCategory, page]);
+  }, [selectedCategory, page, search]);
 
   const handleSearch = (event) => {
     event.preventDefault();
     setPage(1);
-    fetchProducts();
+    const trimmed = search.trim();
+    if (trimmed) {
+      setSearchParams({ search: trimmed });
+    } else {
+      setSearchParams({});
+    }
   };
 
   const formatPrice = (value) => (

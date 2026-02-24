@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
@@ -6,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -18,7 +20,11 @@ const Login = () => {
       toast.success('Logged in successfully');
       navigate('/profile');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Login failed');
+      if (error.response?.status === 401) {
+        toast.error('User ID or password is wrong');
+      } else {
+        toast.error(error.response?.data?.message || 'Login failed');
+      }
     } finally {
       setLoading(false);
     }
@@ -42,13 +48,23 @@ const Login = () => {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Password</label>
-              <input
-                type="password"
-                className="w-full border rounded-lg px-3 py-2"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className="w-full border rounded-lg px-3 py-2 pr-20"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
+              </div>
             </div>
             <button type="submit" className="btn btn-primary w-full" disabled={loading}>
               {loading ? 'Signing in...' : 'Login'}

@@ -25,10 +25,9 @@ function App() {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const location = useLocation();
 
-  // Hide header on admin pages
+  // Keep header visible on all pages
   useEffect(() => {
-    const isAdminPage = location.pathname.startsWith('/admin');
-    setIsHeaderVisible(!isAdminPage);
+    setIsHeaderVisible(true);
   }, [location]);
 
   return (

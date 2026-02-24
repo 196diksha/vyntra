@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiTrash2 } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
+import axios from 'axios';
 
 const formatPrice = (value) => (
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value)
@@ -11,6 +13,7 @@ const resolveImageUrl = (src) => (
 
 const Cart = () => {
   const { items, updateQuantity, removeFromCart, clearCart, totals } = useCart();
+  const [isPaying, setIsPaying] = useState(false);
 
   return (
     <div className="py-10">
@@ -97,12 +100,47 @@ const Cart = () => {
                 <span>Total</span>
                 <span>{formatPrice(totals.subtotal)}</span>
               </div>
-              <button type="button" className="btn btn-primary w-full">
-                Proceed to Checkout
+              <button
+                type="button"
+                className="btn btn-primary w-full"
+                disabled={isPaying}
+                onClick={async () => {
+                  try {
+                    setIsPaying(true);
+                    const { data } = await axios.post('/api/payments/create-order', { items });
+                    const order = data?.order;
+                    if (!order) {
+                      throw new Error('Order creation failed');
+                    }
+
+                    const options = {
+                      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                      amount: order.amount,
+                      currency: order.currency,
+                      name: 'Vyntra',
+                      description: 'Order payment',
+                      order_id: order.id,
+                      handler: async (response) => {
+                        await axios.post('/api/payments/verify', response);
+                        setIsPaying(false);
+                        alert('Payment successful');
+                      }
+                    };
+
+                    const rzp = new window.Razorpay(options);
+                    rzp.on('payment.failed', () => {
+                      setIsPaying(false);
+                      alert('Payment failed');
+                    });
+                    rzp.open();
+                  } catch (err) {
+                    setIsPaying(false);
+                    console.error(err);
+                  }
+                }}
+              >
+                {isPaying ? 'Processing...' : 'Proceed to Checkout'}
               </button>
-              <p className="text-xs text-gray-500 mt-3">
-                Checkout flow is not wired yet. This is a UI placeholder.
-              </p>
             </div>
           </div>
         )}

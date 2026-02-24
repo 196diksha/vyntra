@@ -7,6 +7,7 @@ const AdminProducts = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAutofilling, setIsAutofilling] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
     name: '',
@@ -166,6 +167,41 @@ const AdminProducts = () => {
     }
   };
 
+  const handleAutofill = async (target) => {
+    if (!form.name || !form.category) {
+      setError('Please enter product name and category for AI autofill.');
+      return;
+    }
+    try {
+      setIsAutofilling(true);
+      setError('');
+      const { data } = await axios.post('/api/admin/ai-product', {
+        name: form.name,
+        category: form.category,
+        description: form.description
+      });
+
+      if (target === 'description' && data?.description) {
+        setForm((prev) => ({ ...prev, description: data.description }));
+      }
+      if (target === 'specifications' && Array.isArray(data?.specifications)) {
+        setSpecRows(
+          data.specifications.map((spec) => ({
+            label: spec.label || '',
+            value: spec.value || ''
+          }))
+        );
+      }
+      if (target === 'sizes' && Array.isArray(data?.sizes) && data.sizes.length > 0) {
+        setForm((prev) => ({ ...prev, sizes: data.sizes.join(', ') }));
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'AI autofill failed');
+    } finally {
+      setIsAutofilling(false);
+    }
+  };
+
   const handleDelete = async (productId) => {
     if (!window.confirm('Delete this product?')) return;
     try {
@@ -277,7 +313,17 @@ const AdminProducts = () => {
                 </div>
                 {showSizes && (
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Sizes</label>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">Sizes</label>
+                      <button
+                        type="button"
+                        onClick={() => handleAutofill('sizes')}
+                        className="text-xs font-semibold text-indigo-600 hover:underline"
+                        disabled={isAutofilling || isSubmitting}
+                      >
+                        Generate with AI
+                      </button>
+                    </div>
                     <input
                       name="sizes"
                       type="text"
@@ -294,7 +340,17 @@ const AdminProducts = () => {
               )}
             </div>
             <div className="md:col-span-2">
-              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Description</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">Description</label>
+                <button
+                  type="button"
+                  onClick={() => handleAutofill('description')}
+                  className="text-xs font-semibold text-indigo-600 hover:underline"
+                  disabled={isAutofilling || isSubmitting}
+                >
+                  Generate with AI
+                </button>
+              </div>
               <textarea
                 name="description"
                 rows="4"
@@ -340,6 +396,14 @@ const AdminProducts = () => {
                 <FiList />
                 <p className="text-sm font-semibold uppercase tracking-wide">Specifications</p>
               </div>
+              <button
+                type="button"
+                onClick={() => handleAutofill('specifications')}
+                className="mb-3 text-xs font-semibold text-indigo-600 hover:underline"
+                disabled={isAutofilling || isSubmitting}
+              >
+                Generate with AI
+              </button>
               <div className="grid grid-cols-1 gap-3">
                 {specRows.map((row, index) => (
                   <div key={`spec-${index}`} className="grid grid-cols-2 gap-2">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FiShoppingCart, FiUser, FiSearch, FiMenu, FiX, FiHeart } from 'react-icons/fi';
@@ -7,17 +7,29 @@ import { toast } from 'react-toastify';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { currentUser, logout } = useAuth();
   const { items } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
+  const userMenuRef = useRef(null);
 
   useEffect(() => {
     if (location.pathname === '/') {
       setSearchQuery('');
     }
   }, [location]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -71,12 +83,17 @@ const Header = () => {
             </Link>
             
             {currentUser ? (
-              <div className="relative group">
-                <button className="flex items-center space-x-1 p-2">
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  className="flex items-center space-x-1 p-2"
+                  onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                  type="button"
+                >
                   <FiUser className="text-xl" />
                   <span className="hidden md:inline text-sm">{currentUser.name}</span>
                 </button>
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block z-50">
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                   <Link to="/profile" className="block px-4 py-2 text-sm hover:bg-gray-100">
                     Profile
                   </Link>
@@ -91,7 +108,8 @@ const Header = () => {
                   >
                     Logout
                   </button>
-                </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex space-x-2">

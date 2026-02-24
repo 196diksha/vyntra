@@ -3,8 +3,10 @@ const User = require('../models/User');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const { protect, admin } = require('../middleware/authMiddleware');
+const OpenAI = require('openai');
 
 const router = express.Router();
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // @desc    Get admin dashboard stats
 // @route   GET /api/admin/dashboard
@@ -62,6 +64,57 @@ router.get('/dashboard', protect, admin, async (req, res) => {
       recentOrders: orders,
       chartData
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    AI autofill product details
+// @route   POST /api/admin/ai-product
+// @access  Private/Admin
+router.post('/ai-product', protect, admin, async (req, res) => {
+  try {
+    const { name, category, description } = req.body;
+
+    if (!name || !category) {
+      return res.status(400).json({ message: 'Name and category are required' });
+    }
+
+    const prompt = `
+You are a product copywriter for an ecommerce store.
+Given the product name and category, generate:
+1) A short description (max 2 sentences).
+2) A list of 4-6 specifications as label/value pairs.
+3) A sizes list only if the category needs sizes (Clothing, Accessories, Sports); otherwise empty.
+
+Return strictly JSON with this shape:
+{
+  "description": "string",
+  "specifications": [{"label":"string","value":"string"}],
+  "sizes": ["S","M","L"]
+}
+
+Product:
+Name: ${name}
+Category: ${category}
+Existing description (optional): ${description || 'N/A'}
+`;
+
+    const aiResponse = await openai.responses.create({
+      model: 'gpt-4.1-mini',
+      input: prompt,
+      max_output_tokens: 400
+    });
+
+    const text = aiResponse.output_text || '';
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      return res.status(500).json({ message: 'AI response parsing failed', raw: text });
+    }
+
+    res.json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

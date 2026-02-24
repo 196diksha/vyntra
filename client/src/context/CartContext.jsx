@@ -1,28 +1,37 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext();
 
 export const useCart = () => useContext(CartContext);
 
-const STORAGE_KEY = 'cart';
+const baseStorageKey = 'cart';
 
 export const CartProvider = ({ children }) => {
   const [items, setItems] = useState([]);
+  const [hydrated, setHydrated] = useState(false);
+  const { currentUser } = useAuth();
+  const storageKey = currentUser?._id ? `${baseStorageKey}:${currentUser._id}` : `${baseStorageKey}:guest`;
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    setHydrated(false);
+    const stored = localStorage.getItem(storageKey);
     if (stored) {
       try {
         setItems(JSON.parse(stored));
       } catch {
         setItems([]);
       }
+    } else {
+      setItems([]);
     }
-  }, []);
+    setHydrated(true);
+  }, [storageKey]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }, [items]);
+    if (!hydrated) return;
+    localStorage.setItem(storageKey, JSON.stringify(items));
+  }, [items, hydrated, storageKey]);
 
   const addToCart = (product, qty = 1, options = {}) => {
     const size = options.size || null;

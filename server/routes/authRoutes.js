@@ -1,10 +1,12 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 const router = express.Router();
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -126,6 +128,60 @@ router.post('/make-admin', async (req, res) => {
     await user.save();
 
     res.json({ message: 'User promoted to admin', email: user.email });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @desc    Google OAuth Login
+// @route   POST /api/auth/google
+// @access  Public
+router.post('/google', async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ message: 'Token is required' });
+    }
+
+    // Verify the token
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, sub: googleId } = payload;
+
+    // Find or create user
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create new user
+      user = await User.create({
+        name,
+        email,
+        googleId,
+        password: undefined
+      });
+    } else if (!user.googleId) {
+      // Update existing user with googleId if they don't have one
+      user.googleId = googleId;
+      await user.save();
+    }
+
+    // Generate JWT token
+    const jwtToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRE
+    });
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      token: jwtToken
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

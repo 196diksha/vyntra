@@ -16,8 +16,14 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Please provide a password'],
-    minlength: 6
+    minlength: 6,
+    required: function() {
+      return !this.googleId;
+    }
+  },
+  googleId: {
+    type: String,
+    sparse: true
   },
   role: {
     type: String,
@@ -33,7 +39,9 @@ const userSchema = new mongoose.Schema({
 // Hash password before saving
 userSchema.pre('save', async function() {
   if (!this.isModified('password')) return;
-  this.password = await bcrypt.hash(this.password, 12);
+  if (this.password) {
+    this.password = await bcrypt.hash(this.password, 12);
+  }
 });
 
 module.exports = mongoose.model('User', userSchema);

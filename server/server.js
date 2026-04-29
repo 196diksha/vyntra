@@ -38,6 +38,7 @@ app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
+app.use('/api/chat', require('./routes/chatRoutes'));
 
 // Serve static files (for product images)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

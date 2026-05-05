@@ -132,6 +132,44 @@ router.get('/users', protect, admin, async (req, res) => {
   }
 });
 
+// @desc    Update user role
+// @route   PUT /api/admin/users/:id/role
+// @access  Private/Admin
+router.put('/users/:id/role', protect, admin, async (req, res) => {
+  try {
+    const { role } = req.body;
+
+    if (!['user', 'admin'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (String(user._id) === String(req.user._id) && role !== 'admin') {
+      return res.status(400).json({ message: 'You cannot remove your own admin access' });
+    }
+
+    user.role = role;
+    await user.save();
+
+    res.json({
+      message: `User role updated to ${role}`,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // @desc    Delete user
 // @route   DELETE /api/admin/users/:id
 // @access  Private/Admin

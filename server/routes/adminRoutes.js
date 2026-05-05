@@ -6,7 +6,14 @@ const { protect, admin } = require('../middleware/authMiddleware');
 const OpenAI = require('openai');
 
 const router = express.Router();
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+const getOpenAIClient = () => {
+  if (!process.env.OPENAI_API_KEY) {
+    return null;
+  }
+
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+};
 
 // @desc    Get admin dashboard stats
 // @route   GET /api/admin/dashboard
@@ -75,9 +82,14 @@ router.get('/dashboard', protect, admin, async (req, res) => {
 router.post('/ai-product', protect, admin, async (req, res) => {
   try {
     const { name, category, description } = req.body;
+    const openai = getOpenAIClient();
 
     if (!name || !category) {
       return res.status(400).json({ message: 'Name and category are required' });
+    }
+
+    if (!openai) {
+      return res.status(503).json({ message: 'AI autofill is not configured' });
     }
 
     const prompt = `

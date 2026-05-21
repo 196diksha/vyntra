@@ -98,9 +98,20 @@ const Header = () => {
                     Profile
                   </Link>
                   {currentUser.role === 'admin' && (
+                    <>
                     <Link to="/admin/dashboard" className="block px-4 py-2 text-sm hover:bg-gray-100">
                       Admin Dashboard
                     </Link>
+                    <Link to="/admin/products" className="block px-4 py-2 text-sm hover:bg-gray-100">
+                      Manage Products
+                    </Link>
+                    <Link to="/admin/users" className="block px-4 py-2 text-sm hover:bg-gray-100">
+                      Mange Users
+                    </Link>
+                    <Link to="/admin/orders" className="block px-4 py-2 text-sm hover:bg-gray-100">
+                      Mange Orders
+                    </Link>
+                   </>
                   )}
                   <button 
                     onClick={handleLogout}
